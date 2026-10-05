@@ -9,7 +9,8 @@ article figures.
 
 Inputs (all existing, read-only)
   inferred_sets/pairs.parquet                    main run, 631 (CLEAR, science) pairs
-  .../survey_B/inferred_sets/pairs.parquet       CLEAR frames for the survey_B pairs
+  .../survey_B/inferred_sets/pairs.parquet       CLEAR partner for the 45 early-run pairs
+                                                 (later reconstruction; not verifiable)
   .../survey_B/inferred_sets/pairs_infer_set.parquet   (fallback, 156EN)
   pre_pipeline/06_flagged_pairs.json             quality-control exclusions (main run)
   pre_pipeline/clean_pairs.parquet               573 pairs passing QC (main run)
@@ -92,7 +93,10 @@ def main() -> int:
     # survey_B pairs: pairs.parquet first, then pairs_infer_set.parquet for the 156EN pairs it lacks
     b = pd.concat([pd.read_parquet(SURVEY_B_PAIRS),
                    pd.read_parquet(SURVEY_B_PAIRS.with_name("pairs_infer_set.parquet"))]).drop_duplicates("science_opusid")
-    b = b[b.science_opusid.isin(processed - set(main_pairs.science_opusid))].assign(run="survey_B")
+    # These 45 pairs come from an earlier step-02 run (April 2026) whose pair table was later
+    # overwritten. Their CLEAR partner is taken from a later reconstruction and could not be
+    # verified against the April residuals (no longer stored): clear_verified = False.
+    b = b[b.science_opusid.isin(processed - set(main_pairs.science_opusid))].assign(run="early_run")
     df = pd.concat([main_pairs, b], ignore_index=True).drop_duplicates("science_opusid")
 
     flagged = set(json.loads((ROOT / "pre_pipeline/06_flagged_pairs.json").read_text())["flagged_opusids"])
@@ -100,6 +104,7 @@ def main() -> int:
     lab = json.loads((ROOT / "post_pipeline/11_bundle_A_review_labels.json").read_text())
     pos, dbt = set(lab["selected_opusids"]), set(lab["doubtful_opusids"])
 
+    df["clear_verified"] = df.run == "main"
     df["qc_flagged"] = df.science_opusid.isin(flagged)
     df["in_clean_pairs_573"] = df.science_opusid.isin(clean)
     df["detection_run"] = df.science_opusid.isin(processed)
@@ -140,7 +145,7 @@ def main() -> int:
         "opusid": "science_opusid", "th_gvec_img": "predicted_orientation_deg",
         "d_to_gvec": "deviation_from_prediction_deg"}), on="science_opusid", how="left")
 
-    cols = ["science_opusid", "clear_opusid", "run", "science_filter", "time1", "clear_time1", "dt_s",
+    cols = ["science_opusid", "clear_opusid", "clear_verified", "run", "science_filter", "time1", "clear_time1", "dt_s",
             "CASSINIrevnoint", "flyby", "CASSINIobsname",
             "RINGGEOphase1", "RINGGEOphase2", "RINGGEOobserverringelevation1", "RINGGEOobserverringelevation2",
             "RINGGEOringradius1", "RINGGEOringradius2", "RINGGEOresolution1", "RINGGEOresolution2",
@@ -165,7 +170,7 @@ def main() -> int:
         OUT / "figure_viewing_geometry.csv", index=False, float_format="%.6g")
 
     print(f"[20] image_pairs.csv: {len(df)} pairs  "
-          f"(main {sum(df.run == 'main')}, survey_B {sum(df.run == 'survey_B')}; "
+          f"(main {sum(df.run == 'main')}, early_run {sum(df.run == 'early_run')}; "
           f"QC-flagged {int(df.qc_flagged.sum())}; detection run {int(df.detection_run.sum())}; "
           f"positive {sum(df.classification == 'positive')}, doubtful {sum(df.classification == 'doubtful')})")
     print(f"[20] missing OPUS metadata: {int(df.orbit.isna().sum())}, missing flyby: {int(df.flyby.isna().sum())}")

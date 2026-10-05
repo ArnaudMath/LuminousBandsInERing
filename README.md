@@ -57,12 +57,13 @@ the file), or each step on its own. All outputs go to `data/`.
 | 04 | `04_download_images.py` | Downloads the calibrated `_CALIB.IMG/.LBL` files from OPUS (dry run without `--download`) | `data/raw_images/` |
 | 05 | `05_clear_subtraction.py` | Residual = science − CLEAR (both CISSCAL I/F), 3σ outlier filter | `data/cisscal_output/<id>/residual.npz`, `grayscale.png`, `redblue.png` |
 | 06 | `06_flag_review.py` | Interactive quality review of the residuals | `06_flagged_pairs.json` |
+| 06b | `06b_flag_review_unreviewed.py` | Quality review of the 51 pairs that reached detection without step 06 | `06b_flagged_pairs.json` |
 | 07 | `07_detect_bands.py` | Preprocessing, FFT and zero-padded angular spectra, null ensemble, smoothing (9 then 64 bins), peak and FWHM | `data/pipeline_output/<id>/bundle_A.png`, `spectra.npz`, `metrics.json`; `summary.parquet` |
 | 08 | `08_obs_sequences.py` | Retrieves the flyby / orbit tag of every image | `data/pipeline_output/obs_sequences.csv` |
 | 09 | `09_review_detections.py` | Interactive visual review: positive / doubtful / unlabelled | `09_detection_labels.json` |
 
 Result of the paper run: 631 pairs in the main reconstruction, of which 52 were
-excluded in the quality review; together with 45 pairs from a second
+excluded in the quality review; together with 45 pairs from an earlier
 reconstruction run, 624 pairs went through detection and visual review, giving
 62 positive and 26 doubtful classifications. The per-pair accounting is in the
 data deposit (`image_pairs.csv`).
