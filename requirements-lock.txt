@@ -1,0 +1,11 @@
+# Exact environment of the paper run (Python 3.13.5)
+pyiss @ git+https://github.com/ArnaudMath/pyiss@d506ca304e282a41e4555241ef8d6b1bc680ffda
+numpy==2.5.3
+pandas==3.0.6
+pyarrow==25.0.1
+scipy==1.18.1
+matplotlib==3.11.2
+requests==2.34.2
+pillow==12.3.0
+tqdm==4.70.1
+spiceypy==8.2.0

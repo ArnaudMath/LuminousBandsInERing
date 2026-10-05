@@ -1,0 +1,33 @@
+[project]
+name = "luminous-bands-ering"
+version = "1.0.0"
+description = "Detection and characterisation of luminous bands in Saturn's E ring from Cassini ISS images (code for the paper)"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Arnaud Mathieu", email = "arnaudmath00@gmail.com" }]
+requires-python = ">=3.11"
+# Lower bounds = versions used for the paper (Python 3.13); upper bounds = next major release.
+# Exact versions of the paper run: requirements-lock.txt
+dependencies = [
+    "pyiss @ git+https://github.com/ArnaudMath/pyiss@d506ca304e282a41e4555241ef8d6b1bc680ffda",
+    "numpy>=2.5,<3",
+    "pandas>=3.0,<4",
+    "pyarrow>=25.0,<26",
+    "scipy>=1.18,<2",
+    "matplotlib>=3.11,<4",
+    "requests>=2.34,<3",
+    "pillow>=12.3,<13",
+    "tqdm>=4.70,<5",
+    "spiceypy>=8.2,<9",
+]
+
+[project.optional-dependencies]
+# Interactive notebooks (post_pipeline/13 and 17)
+notebooks = ["jupyterlab", "ipywidgets", "ipympl"]
+
+[project.urls]
+Repository = "https://github.com/ArnaudMath/LuminousBandsInERing"
+
+[tool.setuptools]
+py-modules = []
