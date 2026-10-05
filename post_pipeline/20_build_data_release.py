@@ -13,6 +13,7 @@ Inputs (all existing, read-only)
                                                  (later reconstruction; not verifiable)
   .../survey_B/inferred_sets/pairs_infer_set.parquet   (fallback, 156EN)
   pre_pipeline/06_flagged_pairs.json             quality-control exclusions (main run)
+  pre_pipeline/06b_flagged_pairs.json            review of the 51 pairs that skipped step 06
   pre_pipeline/clean_pairs.parquet               573 pairs passing QC (main run)
   pipeline_output/<id>/metrics.json              detection results, 624 pairs
   post_pipeline/11_bundle_A_review_labels.json   positive / doubtful labels
@@ -106,8 +107,13 @@ def main() -> int:
 
     df["clear_verified"] = df.run == "main"
     df["qc_flagged"] = df.science_opusid.isin(flagged)
+    rev06b = ROOT / "pre_pipeline/06b_flagged_pairs.json"
+    flagged_b = set(json.loads(rev06b.read_text())["flagged_opusids"]) if rev06b.exists() else set()
+    df["qc_flagged"] |= df.science_opusid.isin(flagged_b)
     df["in_clean_pairs_573"] = df.science_opusid.isin(clean)
     df["detection_run"] = df.science_opusid.isin(processed)
+    df["qc_review"] = df.science_opusid.map(
+        lambda o: "06" if (o in clean or o in flagged) else ("06b" if o in processed else ""))
     df["classification"] = df.science_opusid.map(lambda o: "positive" if o in pos else "doubtful" if o in dbt else "")
 
     md = opus_metadata(sorted(df.science_opusid))
@@ -149,7 +155,7 @@ def main() -> int:
             "CASSINIrevnoint", "flyby", "CASSINIobsname",
             "RINGGEOphase1", "RINGGEOphase2", "RINGGEOobserverringelevation1", "RINGGEOobserverringelevation2",
             "RINGGEOringradius1", "RINGGEOringradius2", "RINGGEOresolution1", "RINGGEOresolution2",
-            "qc_flagged", "in_clean_pairs_573", "detection_run", "classification",
+            "qc_review", "qc_flagged", "in_clean_pairs_573", "detection_run", "classification",
             "theta_star_deg", "fwhm_deg", "zp_snr",
             "contrast_delta_IF", "contrast_C", "contrast_snr",
             "enceladus_longitude_deg", "ansa", "cassini_x_RS", "cassini_y_RS", "enceladus_x_RS", "enceladus_y_RS",
